@@ -1,1 +1,1 @@
-# Francis_P-values
+These are the replication files for “P-Values on the Free-Slave State Border: A Critique of Bleakley and Rhode” by Joseph Francis. First download the files as an archive, unzip it, then run “database.R”, making sure you set the working directory to the uzipped folder. Once that script has run, you will be able to run “regression.R,” which will provide you with the results reported in the paper in your console.
