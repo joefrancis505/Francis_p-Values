@@ -1,5 +1,5 @@
 # Set working directory here to the unzipped folder where this script and the data are located
-setwd("/Francis_P-values-main”)
+setwd("/Users/joe/Downloads/Francis_P-values-main")
 
 # List of packages to install
 packages <- c("tidyverse", "lfe", "sandwich", "lmtest", "knitr", "stringr", "sf", "dplyr")
@@ -319,7 +319,7 @@ print_full_regression_table <- function(results, title) {
       "Linear terms are multiplied by 100, quadratic terms by 10,000, and cubic terms by 1,000,000 to maintain correct interpretation.\n")
 }
 
-cat(“\nPart I: The Replication of Bleakley and Rhode\n")
+cat("\nPart I: The Replication of Bleakley and Rhode\n")
 
 # Print results tables for log_ruralpopden
 print_formatted_table(results_lfe_12, paste("Table 1: Equations 1 and 2, using lfe package with explicit cluster variable (log_ruralpopden) -", running_variable))
@@ -336,7 +336,7 @@ print_formatted_table(results_sandwich_3_farmv, paste("Table 8: Equation 3, usin
 cat("Note: Each cell contains: coefficient (standard error) {p-value} [number of observations]\n")
 cat("Significance levels: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1\n")
 
-cat(“\nPart II: The Addition of the Interaction Term for Slavery’s Legality Multiplied by Longitude\n”)
+cat("\nPart II: The Addition of the Interaction Term for Slavery’s Legality Multiplied by Longitude\n")
       
 # Create full regression tables for log_ruralpopden (Tables 9 and 10)
 data_1860_300 <- prepare_data(1860, 300, "log_ruralpopden")
@@ -437,11 +437,13 @@ print_formatted_table_13_14 <- function(results, title) {
   cat("Significance levels: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1\n")
 }
 
-cat(“\nPart III: The Inflection Points for Slavery’s Legality Multiplied by Longitude\n”)
+cat("\nPart III: The Inflection Points for Slavery’s Legality Multiplied by Longitude\n")
     
 # Print Table 13 and Table 14
 print_formatted_table_13_14(results_table_13, paste("Table 13: Equation 4, log_ruralpopden (300-mile sample) -", running_variable))
 print_formatted_table_13_14(results_table_14, paste("Table 14: Equation 4, log_farmv (300-mile sample) -", running_variable))
+
+cat("\nPart IV: Creation of GeoPackages\n")
 
 # Load border shapefile
 border <- st_read("Data/Border/1820_border/1820_border.shp")
