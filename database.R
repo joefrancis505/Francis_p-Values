@@ -1,5 +1,8 @@
-# Set working directory here to the unzipped folder where this script and the data are located
-setwd("/Francis_P-values-main”)
+# Set working directory to where this script is located
+setwd(dirname(sys.frame(1)$ofile))
+
+# Set a CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 # List of packages to install
 packages <- c("sf", "dplyr", "purrr", "readr", "units")
