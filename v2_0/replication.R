@@ -19,17 +19,19 @@ if (any(installed_packages == FALSE)) {
 # Load the packages
 invisible(lapply(packages, library, character.only = TRUE))
 
+# Clear console
+cat("\014")
+
+
 # Choose the running variable: "distance" or "distance_1820"
 running_variable <- "distance"  # "distance" uses the historical border; "distance_1820" uses the 1820 border throughout
 
 # Load and prepare data
 data <- read_csv("database.csv", show_col_types = FALSE)
 
-sink("replication.txt")
-
 # Function to prepare data for a specific year and sample size
 prepare_data <- function(year, sample_size, dependent_var) {
-  result <- data %>%
+  data %>%
     filter(!(state %in% c("Kansas Territory", "Nebraska Territory"))) %>%
     mutate(
       log_ruralpopden = log(ruralpopden),
@@ -44,9 +46,7 @@ prepare_data <- function(year, sample_size, dependent_var) {
            !is.na(area),
            year == !!year,
            !!sym(running_variable) >= -sample_size & !!sym(running_variable) <= sample_size,
-           !is.na(!!sym(dependent_var)))
-  
-  result %>%
+           !is.na(!!sym(dependent_var))) %>%
     mutate(lon_cluster = as.factor(cut(longitude_miles, breaks = 15)))
 }
 
@@ -257,6 +257,7 @@ for (i in seq_along(years)) {
 }
 
 # Create results tables for log_farmv (Tables 5-8)
+# Create results tables for log_farmv (Tables 5-8)
 years_farmv <- c(1850, 1860)
 results_lfe_12_farmv <- matrix(nrow = length(years_farmv), ncol = length(sample_sizes) + 3)
 results_sandwich_12_farmv <- matrix(nrow = length(years_farmv), ncol = length(sample_sizes) + 3)
@@ -342,7 +343,7 @@ cat("Note: Each cell contains: coefficient (standard error) {p-value} [number of
 cat("Significance levels: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1\n")
 
 cat("\nPart II: The Addition of the Interaction Term for Slavery’s Legality Multiplied by Longitude\n")
-
+      
 # Create full regression tables for log_ruralpopden (Tables 9 and 10)
 data_1860_300 <- prepare_data(1860, 300, "log_ruralpopden")
 
@@ -400,6 +401,7 @@ for (i in seq_along(years_table_13)) {
     results <- run_regression_table_13_14(year, 300, "log_ruralpopden")
     results_table_13[i, ] <- c(year, results)
   }, error = function(e) {
+    cat("Error for year", year, ":", conditionMessage(e), "\n")
     results_table_13[i, ] <- c(year, rep(NA, 8))
   })
 }
@@ -416,6 +418,7 @@ for (i in seq_along(years_table_14)) {
     results <- run_regression_table_13_14(year, 300, "log_farmv")
     results_table_14[i, ] <- c(year, results)
   }, error = function(e) {
+    cat("Error for year", year, ":", conditionMessage(e), "\n")
     results_table_14[i, ] <- c(year, rep(NA, 8))
   })
 }
@@ -441,10 +444,129 @@ print_formatted_table_13_14 <- function(results, title) {
 }
 
 cat("\nPart III: The Inflection Points for Slavery’s Legality Multiplied by Longitude\n")
-
+    
 # Print Table 13 and Table 14
 print_formatted_table_13_14(results_table_13, paste("Table 13: Equation 4, log_ruralpopden (300-mile sample) -", running_variable))
 print_formatted_table_13_14(results_table_14, paste("Table 14: Equation 4, log_farmv (300-mile sample) -", running_variable))
 
-sink()
-cat("Results saved to replication.txt\n")
+cat("\nPart IV: Creation of GeoPackages\n")
+
+# Load border shapefile
+border <- st_read("Data/Border/1820_border/1820_border.shp")
+
+# Print CRS information
+print(paste("Border CRS:", st_crs(border)$input))
+
+# Function to find intersection with additional checks
+find_intersection <- function(inflection_point, border, year) {
+  tryCatch({
+    vertical_line <- st_linestring(matrix(c(inflection_point, -1e6, inflection_point, 1e6), ncol=2, byrow=TRUE))
+    vertical_line <- st_sfc(vertical_line, crs = st_crs(border))
+    
+    intersection <- st_intersection(border, vertical_line)
+    
+    if (length(intersection) > 0) {
+      coords <- st_coordinates(intersection)
+      cat(paste("Found intersection for year", year, ":", coords[1, c("X", "Y")], "\n"))
+      return(coords[1, c("X", "Y")])
+    } else {
+      warning(paste("No intersection found for year", year, "at inflection point", inflection_point))
+      return(c(NA, NA))
+    }
+  }, error = function(e) {
+    warning(paste("Error in find_intersection for year", year, ":", e$message))
+    return(c(NA, NA))
+  })
+}
+
+# Function to process results with additional checks
+process_results <- function(results, border) {
+  df <- data.frame(
+    Year = integer(),
+    Inflection_Miles = numeric(),
+    Inflection_Meters = numeric(),
+    Intersection_X = numeric(),
+    Intersection_Y = numeric(),
+    Observations = integer(),
+    coef = numeric(),
+    p_value = numeric(),
+    stringsAsFactors = FALSE
+  )
+  
+  for (i in 1:nrow(results)) {
+    year <- results[i, 1]
+    inflection_miles <- results[i, 8]
+    inflection_meters <- inflection_miles * 1609.344
+    
+    cat(paste("Processing year", year, "with inflection point", inflection_miles, "miles (", inflection_meters, "meters)\n"))
+    
+    border_range <- st_bbox(border)
+    if (inflection_meters < border_range["xmin"] || inflection_meters > border_range["xmax"]) {
+      warning(paste("Inflection point for year", year, "is outside the range of the border shapefile"))
+      intersection <- c(NA, NA)
+    } else {
+      intersection <- find_intersection(inflection_meters, border, year)
+    }
+    
+    df <- rbind(df, data.frame(
+      Year = year,
+      Inflection_Miles = inflection_miles,
+      Inflection_Meters = inflection_meters,
+      Intersection_X = intersection[1],
+      Intersection_Y = intersection[2],
+      Observations = results[i, 9],
+      coef = results[i, 5],
+      p_value = results[i, 7]
+    ))
+  }
+  
+  return(df)
+}
+
+# Process results for log_ruralpopden (Table 13)
+ruralpopden_df <- process_results(results_table_13, border)
+
+# Process results for log_farmv (Table 14)
+farmv_df <- process_results(results_table_14, border)
+
+# Function to remove rows with NA coordinates and print info
+clean_and_report <- function(df, name) {
+  na_rows <- sum(is.na(df$Intersection_X) | is.na(df$Intersection_Y))
+  if (na_rows > 0) {
+    cat(paste0("Removed ", na_rows, " row(s) with NA coordinates from ", name, " dataset.\n"))
+    cat("Years with NA coordinates:", paste(df$Year[is.na(df$Intersection_X) | is.na(df$Intersection_Y)], collapse = ", "), "\n")
+    df <- df[!is.na(df$Intersection_X) & !is.na(df$Intersection_Y), ]
+  }
+  return(df)
+}
+
+# Clean datasets and report
+ruralpopden_df <- clean_and_report(ruralpopden_df, "ruralpopden")
+farmv_df <- clean_and_report(farmv_df, "farmv")
+
+# Create directory for saving results if it doesn't exist
+inflection_dir <- paste0("Results/Inflection_points_", running_variable)
+dir.create(inflection_dir, showWarnings = FALSE, recursive = TRUE)
+
+# Save results as GeoPackage using sf
+st_write(st_as_sf(ruralpopden_df, coords = c("Intersection_X", "Intersection_Y"), crs = st_crs(border)),
+         file.path(inflection_dir, paste0("ruralpopden_inflection_points_", running_variable, ".gpkg")),
+         driver = "GPKG",
+         append = FALSE)
+
+st_write(st_as_sf(farmv_df, coords = c("Intersection_X", "Intersection_Y"), crs = st_crs(border)),
+         file.path(inflection_dir, paste0("farmv_inflection_points_", running_variable, ".gpkg")),
+         driver = "GPKG",
+         append = FALSE)
+
+print(paste("GeoPackage files have been created successfully in the", inflection_dir, "directory."))
+
+# Print summary of results
+cat("\nSummary of results:\n")
+cat("ruralpopden_df:\n")
+print(summary(ruralpopden_df))
+cat("\nfarmv_df:\n")
+print(summary(farmv_df))
+
+# Print the running variable used
+cat("\nRunning variable used:", running_variable, "\n")

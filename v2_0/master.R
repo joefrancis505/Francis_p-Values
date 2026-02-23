@@ -4,7 +4,5 @@ setwd(getSrcDirectory(function(dummy) {dummy}))
 # Clear console
 cat("\014")
 
-source("downloader.R")
-source("database_v3.R")
+source("database_v2.R")
 source("replication.R")
-source("figure.R")

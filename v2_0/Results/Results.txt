@@ -1,0 +1,21 @@
+
+Summary of results:
+ruralpopden_df:
+      Year      Inflection_Miles Inflection_Meters Intersection_X    Intersection_Y    Observations         coef            p_value         
+ Min.   :1800   Min.   : 80.51   Min.   : 129567   Min.   : 129567   Min.   :-15673   Min.   : 359.0   Min.   :-0.4251   Min.   :0.000e+00  
+ 1st Qu.:1815   1st Qu.:260.29   1st Qu.: 418904   1st Qu.: 418904   1st Qu.:  4579   1st Qu.: 528.5   1st Qu.:-0.3098   1st Qu.:4.452e-05  
+ Median :1830   Median :397.40   Median : 639561   Median : 639561   Median :221845   Median : 769.0   Median :-0.2236   Median :8.632e-04  
+ Mean   :1830   Mean   :400.30   Mean   : 644222   Mean   : 644222   Mean   :172856   Mean   : 822.7   Mean   :-0.2421   Mean   :4.512e-02  
+ 3rd Qu.:1845   3rd Qu.:519.79   3rd Qu.: 836524   3rd Qu.: 836524   3rd Qu.:323174   3rd Qu.:1108.0   3rd Qu.:-0.1596   3rd Qu.:3.606e-02  
+ Max.   :1860   Max.   :764.02   Max.   :1229571   Max.   :1229571   Max.   :348316   Max.   :1358.0   Max.   :-0.1077   Max.   :2.427e-01  
+
+farmv_df:
+      Year      Inflection_Miles Inflection_Meters Intersection_X   Intersection_Y    Observations       coef            p_value         
+ Min.   :1850   Min.   : 65.07   Min.   :104720    Min.   :104720   Min.   :345034   Min.   :1190   Min.   :-0.1344   Min.   :0.000e+00  
+ 1st Qu.:1852   1st Qu.:105.18   1st Qu.:169266    1st Qu.:169266   1st Qu.:346349   1st Qu.:1232   1st Qu.:-0.1294   1st Qu.:3.359e-05  
+ Median :1855   Median :145.28   Median :233812    Median :233812   Median :347664   Median :1274   Median :-0.1245   Median :6.719e-05  
+ Mean   :1855   Mean   :145.28   Mean   :233812    Mean   :233812   Mean   :347664   Mean   :1274   Mean   :-0.1245   Mean   :6.719e-05  
+ 3rd Qu.:1858   3rd Qu.:185.39   3rd Qu.:298359    3rd Qu.:298359   3rd Qu.:348980   3rd Qu.:1315   3rd Qu.:-0.1196   3rd Qu.:1.008e-04  
+ Max.   :1860   Max.   :225.50   Max.   :362905    Max.   :362905   Max.   :350295   Max.   :1357   Max.   :-0.1146   Max.   :1.344e-04  
+
+Running variable used: distance 
